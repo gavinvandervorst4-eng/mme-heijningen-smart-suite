@@ -1,1 +1,122 @@
 
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14263a">
+<title>MME Foto Marker</title>
+<style>
+:root{color-scheme:dark;--bg:#0c1520;--panel:#142335;--panel2:#1a2d42;--line:#30465d;--text:#f2f6fb;--muted:#b3c1d0;--accent:#ef3434;--blue:#234c70}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#0a121c,#14283a);color:var(--text);font:16px/1.45 Arial,Helvetica,sans-serif}header{padding:18px 16px 14px;background:#101e2d;border-bottom:3px solid #d72f35}header .brand{font-size:12px;letter-spacing:.22em;font-weight:800;color:#ff6666}h1{margin:3px 0;font-size:clamp(24px,5vw,34px)}header p{margin:5px 0 0;color:var(--muted);font-size:14px}header .owner{margin-top:8px;color:#f2f6fb;font-weight:700;font-size:13px}.wrap{max-width:1100px;margin:auto;padding:14px;display:grid;gap:14px;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr)}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}.panel h2{font-size:18px;margin:0 0 12px}.field{margin:10px 0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px;color:#dce8f4}input,select,textarea,button{font:inherit}input[type=file],input[type=text],select,textarea{width:100%;min-width:0;border:1px solid #496079;border-radius:9px;padding:11px;background:#0e1b29;color:var(--text);font-size:16px}input[type=color]{width:100%;height:44px;padding:4px;border:1px solid #496079;border-radius:9px;background:#0e1b29}input[type=range]{width:100%;accent-color:#ef3434}button{min-height:44px;border:1px solid #496079;border-radius:9px;background:var(--panel2);color:var(--text);padding:10px 12px;font-weight:700;cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #75bfff;outline-offset:2px}.primary{background:#b9252c;border-color:#f45c62}.danger{border-color:#a94449}.toolgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.toolgrid button{padding:8px 5px;font-size:14px}.toolgrid button.active{background:#7d2027;border:2px solid #ff777b}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.canvasbox{background:#080e14;border:1px solid #3a4f64;border-radius:10px;overflow:hidden;min-height:160px;display:flex;align-items:center;justify-content:center}canvas{display:block;width:100%;height:auto;max-height:72vh;object-fit:contain;touch-action:pan-y}.hint,.muted{font-size:13px;color:var(--muted)}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.actions button{flex:1}.status{min-height:24px;margin:9px 0 0;color:#c6d9eb;font-size:13px}.marklist{display:grid;gap:7px;margin-top:10px}.markitem{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13px}.markitem span{overflow-wrap:anywhere;min-width:0}.markitem button{min-height:36px;padding:6px 9px;flex-shrink:0}.hidden{display:none!important}footer{text-align:center;padding:0 14px 22px;color:var(--muted);font-size:12px}
+@media(max-width:760px){.wrap{grid-template-columns:1fr;padding:10px}.panel{padding:12px}header{padding:15px 12px}.canvasbox{min-height:150px}canvas{max-height:55vh}}@media(max-width:360px){.toolgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="brand">MME · NDO TOOLS</div><h1>Foto Marker</h1><p>Markeer onderzoeksfoto's · werkt lokaal op telefoon, tablet en computer</p><p class="owner">Ontwikkeld door Gavin van der Vorst</p></header>
+<main class="wrap">
+<section class="panel">
+<h2>1 · Onderzoeksfoto</h2>
+<div class="field"><label for="photo">Open foto uit galerij of bestanden</label><input id="photo" type="file" accept="image/*" capture="environment"></div>
+<div class="canvasbox"><canvas id="canvas" width="900" height="600" aria-label="Onderzoeksfoto met markeringen"></canvas></div>
+<p class="hint">Tip: tik op de foto om een cirkel, kader, kruis, nummer of tekst te plaatsen. Voor pijlen en lijnen tik je op beginpunt en eindpunt. Voor vrij tekenen sleep je je vinger.</p>
+<div class="actions"><button id="undo" type="button">↶ Ongedaan</button><button id="clear" type="button" class="danger">Alles wissen</button></div>
+<div class="field"><label for="weld">Lasnummer / locatie (optioneel)</label><input id="weld" type="text" maxlength="60" placeholder="Bijv. Las 12"></div>
+</section>
+<section class="panel">
+<h2>2 · Markeringsgereedschap</h2>
+<div class="toolgrid" id="tools">
+<button type="button" data-tool="circle" class="active">🔴 Cirkel</button>
+<button type="button" data-tool="arrow">➜ Pijl</button>
+<button type="button" data-tool="double">↔ Dubbele pijl</button>
+<button type="button" data-tool="rect">▱ Kader</button>
+<button type="button" data-tool="line">／ Lijn</button>
+<button type="button" data-tool="text">T Tekstlabel</button>
+<button type="button" data-tool="cross">✚ Kruis</button>
+<button type="button" data-tool="number">① Nummer</button>
+<button type="button" data-tool="freehand">✎ Vrij tekenen</button>
+</div>
+<div class="field"><label for="label">Tekst / afkeurtekst</label><select id="label">
+<option>AFKEUR - CRACK / SCHEUR</option>
+<option>AFKEUR - LACK OF FUSION</option>
+<option>AFKEUR - LACK OF SIDE WALL FUSION</option>
+<option>AFKEUR - POROSITEIT</option>
+<option>AFKEUR - SLakINSLUITING</option>
+<option>AFKEUR - LINEAIRE INDICATIE</option>
+<option>AFKEUR - ONVOLLEDIGE DOORLASSING</option>
+<option>AFKEUR - ONDERSNIJDING</option>
+<option>AFKEUR - OVERIGE INDICATIE</option>
+<option>GOEDKEUR</option><option>NADER ONDERZOEKEN</option>
+<option value="custom">Eigen tekst invoeren…</option>
+</select></div>
+<div class="field hidden" id="customWrap"><label for="customText">Eigen tekst</label><input id="customText" type="text" maxlength="100" placeholder="Typ eigen tekst"></div>
+<div class="grid2">
+<div class="field"><label for="color">Kleur</label><input id="color" type="color" value="#ff3030"></div>
+<div class="field"><label for="width">Lijndikte: <span id="widthValue">5</span></label><input id="width" type="range" min="2" max="12" value="5"></div>
+</div>
+<div class="field"><label for="note">Extra opmerking (optioneel)</label><textarea id="note" rows="2" maxlength="160" placeholder="Bijv. positie of bevinding"></textarea></div>
+<div class="actions"><button id="add" class="primary" type="button">＋ Markering plaatsen</button></div>
+<p class="hint">Bij een tekstlabel verschijnt de gekozen tekst op de foto. Bij andere markeringen wordt de tekst als label bij het teken geplaatst. Nummermarkeringen krijgen automatisch een volgnummer.</p>
+<h2 style="margin-top:18px">3 · Markeringen en export</h2>
+<div id="markList" class="marklist"><p class="muted">Nog geen markeringen.</p></div>
+<div class="actions"><button id="save" class="primary" type="button">⬇ Foto opslaan als PNG</button></div>
+<p id="status" class="status" role="status" aria-live="polite">Open eerst een foto om te beginnen.</p>
+<p class="hint">De foto wordt op dit apparaat verwerkt; er wordt niets naar een server geüpload. Sla de originele foto apart op.</p>
+</section>
+</main>
+<footer>MME Foto Marker · Visuele aantekeningen zijn geen automatische normbeoordeling.</footer>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const canvas=$('canvas'),ctx=canvas.getContext('2d'),status=$('status');
+let photo=null, marks=[], tool='circle', pendingStart=null, drawing=false, livePoints=[];
+const toolNames={circle:'Cirkel',arrow:'Pijl',double:'Dubbele pijl',rect:'Kader',line:'Lijn',text:'Tekstlabel',cross:'Kruis',number:'Nummer',freehand:'Vrij tekenen'};
+function say(s){status.textContent=s}
+function currentText(){return $('label').value==='custom'? $('customText').value.trim():$('label').value}
+function pos(e){const r=canvas.getBoundingClientRect();return{x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))}}
+function xy(p){return{x:p.x*canvas.width,y:p.y*canvas.height}}
+function fit(w,h){const scale=Math.min(1,2000/Math.max(w,h));canvas.width=Math.max(1,Math.round(w*scale));canvas.height=Math.max(1,Math.round(h*scale))}
+function drawArrow(a,b,reverse=false){const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len,head=Math.max(12,Number($('width').value)*4);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();function tip(p,dir){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-dir*head*ux+dir*head*.48*uy,p.y-dir*head*uy-dir*head*.48*ux);ctx.lineTo(p.x-dir*head*ux-dir*head*.48*uy,p.y-dir*head*uy+dir*head*.48*ux);ctx.closePath();ctx.fill()}tip(b,1);if(reverse)tip(a,-1)}
+function render(){
+ ctx.clearRect(0,0,canvas.width,canvas.height);
+ if(photo)ctx.drawImage(photo,0,0,canvas.width,canvas.height);else{ctx.fillStyle='#111d29';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#f2f6fb';ctx.textAlign='center';ctx.font='bold 28px Arial';ctx.fillText('MME FOTO MARKER',canvas.width/2,canvas.height/2-10);ctx.font='17px Arial';ctx.fillText('Open een onderzoeksfoto om te beginnen',canvas.width/2,canvas.height/2+23)}
+ marks.forEach((m,i)=>{
+  const a=xy(m.a),b=xy(m.b||m.a),w=m.width||5;ctx.save();ctx.strokeStyle=m.color;ctx.fillStyle=m.color;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';
+  const rad=Math.max(14,Math.min(canvas.width,canvas.height)*.035);
+  switch(m.type){
+   case'circle':ctx.beginPath();ctx.ellipse(a.x,a.y,rad*1.5,rad,0,0,Math.PI*2);ctx.stroke();break;
+   case'rect':ctx.strokeRect(a.x-rad*1.5,a.y-rad,rad*3,rad*2);break;
+   case'cross':ctx.beginPath();ctx.moveTo(a.x-rad,a.y);ctx.lineTo(a.x+rad,a.y);ctx.moveTo(a.x,a.y-rad);ctx.lineTo(a.x,a.y+rad);ctx.stroke();break;
+   case'arrow':case'double':drawArrow(a,b,m.type==='double');break;
+   case'line':ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();break;
+   case'freehand':if(m.points?.length){ctx.beginPath();m.points.forEach((p,j)=>{const q=xy(p);if(j===0)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y)});ctx.stroke()}break;
+   case'number':ctx.beginPath();ctx.arc(a.x,a.y,rad,0,Math.PI*2);ctx.stroke();ctx.font='bold '+rad+'px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(m.number),a.x,a.y);break;
+   case'text':{const txt=m.text||'Tekst';ctx.font='bold '+Math.max(16,canvas.width/48)+'px Arial';const bh=Math.max(28,canvas.width/38),tw=ctx.measureText(txt).width;ctx.fillStyle='rgba(0,0,0,.82)';ctx.fillRect(Math.max(0,Math.min(canvas.width-tw-18,a.x)),Math.max(0,a.y-bh),Math.min(canvas.width,tw+18),bh);ctx.fillStyle=m.color;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(txt,Math.max(8,Math.min(canvas.width-tw-8,a.x+9)),Math.max(bh/2,a.y-bh/2),canvas.width-16);break}
+  }
+  if(m.type!=='text'&&m.type!=='number'&&m.text){const txt=(m.number?m.number+'. ':'')+m.text+(m.weld?' | '+m.weld:'');ctx.font='bold '+Math.max(13,canvas.width/68)+'px Arial';const bh=Math.max(24,canvas.width/43),tw=Math.min(ctx.measureText(txt).width,canvas.width-20),lx=Math.max(0,Math.min(canvas.width-tw-12,a.x+rad+5)),ly=Math.max(bh,Math.min(canvas.height-3,a.y-rad-4));ctx.fillStyle='rgba(0,0,0,.84)';ctx.fillRect(lx,ly-bh,tw+12,bh);ctx.fillStyle=m.color;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText(txt,lx+6,ly-6,tw)}
+  if(m.note){ctx.font='14px Arial';ctx.fillStyle=m.color;ctx.fillText(m.note,Math.max(2,Math.min(canvas.width-5,a.x+10)),Math.min(canvas.height-5,a.y+rad+20),canvas.width-12)}
+  ctx.restore();
+ });
+ if(drawing&&livePoints.length){ctx.save();ctx.strokeStyle=$('color').value;ctx.lineWidth=Number($('width').value);ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();livePoints.forEach((p,i)=>{const q=xy(p);if(!i)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y)});ctx.stroke();ctx.restore()}
+}
+function renderList(){const box=$('markList');box.replaceChildren();if(!marks.length){const p=document.createElement('p');p.className='muted';p.textContent='Nog geen markeringen.';box.append(p);return}marks.forEach((m,i)=>{const row=document.createElement('div');row.className='markitem';const span=document.createElement('span');span.style.color=m.color;span.textContent=(i+1)+'. '+toolNames[m.type]+': '+(m.text||'')+(m.weld?' · '+m.weld:'');const btn=document.createElement('button');btn.type='button';btn.textContent='Verwijder';btn.addEventListener('click',()=>{marks.splice(i,1);renumber();render();renderList();say('Markering verwijderd.')});row.append(span,btn);box.append(row)})}
+function renumber(){let n=0;marks.forEach(m=>{if(m.type==='number')m.number=++n})}
+function addMark(type,a,b,points){if(marks.length>=100){say('Maximum van 100 markeringen bereikt.');return}let text=currentText();if(type==='text'&&!text){say('Kies of vul eerst een tekstlabel in.');return}if(type==='number')text='Nummer';marks.push({type,a,b:b||a,points,color:$('color').value,width:Number($('width').value),text,weld:$('weld').value.trim(),note:$('note').value.trim(),number:type==='number'?marks.filter(m=>m.type==='number').length+1:undefined});render();renderList();$('note').value='';say(toolNames[type]+' geplaatst.')}
+$('photo').addEventListener('change',()=>{const f=$('photo').files?.[0];if(!f)return;if(!f.type.startsWith('image/')){say('Kies een geldig afbeeldingsbestand.');return}if(f.size>30*1024*1024){say('Deze foto is groter dan 30 MB. Kies een kleinere foto.');return}const url=URL.createObjectURL(f),im=new Image();im.onload=()=>{photo=im;fit(im.naturalWidth,im.naturalHeight);marks=[];pendingStart=null;render();renderList();say('Foto geopend. Kies een markeringsgereedschap.');URL.revokeObjectURL(url)};im.onerror=()=>{URL.revokeObjectURL(url);say('Foto kon niet worden geopend.')};im.src=url});
+$('tools').addEventListener('click',e=>{const b=e.target.closest('button[data-tool]');if(!b)return;tool=b.dataset.tool;pendingStart=null;$('tools').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));say(tool==='arrow'||tool==='double'||tool==='line'?'Gereedschap gekozen. Tik op beginpunt en daarna op eindpunt.':tool==='freehand'?'Gereedschap gekozen. Sleep met je vinger over de foto.':'Gereedschap gekozen. Tik op de foto om te plaatsen.')});
+$('label').addEventListener('change',()=>{$('customWrap').classList.toggle('hidden',$('label').value!=='custom')});
+$('width').addEventListener('input',()=>{$('widthValue').textContent=$('width').value});
+canvas.addEventListener('pointerdown',e=>{if(!photo){say('Open eerst een foto.');return}const p=pos(e);if(tool==='freehand'){drawing=true;livePoints=[p];canvas.setPointerCapture(e.pointerId);render();return}if(['arrow','double','line'].includes(tool)){if(!pendingStart){pendingStart=p;say('Beginpunt gekozen. Tik op het eindpunt.');return}const a=pendingStart;pendingStart=null;addMark(tool,a,p);return}addMark(tool,p,p)});
+canvas.addEventListener('pointermove',e=>{if(!drawing)return;livePoints.push(pos(e));render()});
+function finishDrawing(){if(!drawing)return;drawing=false;if(livePoints.length>1)addMark('freehand',livePoints[0],livePoints[livePoints.length-1],livePoints.slice());livePoints=[];render()}
+canvas.addEventListener('pointerup',finishDrawing);canvas.addEventListener('pointercancel',finishDrawing);
+$('add').addEventListener('click',()=>{if(!photo){say('Open eerst een foto.');return}if(['arrow','double','line'].includes(tool)){say('Tik op de foto voor het beginpunt en daarna voor het eindpunt.');return}const p=pendingStart||{x:.5,y:.5};pendingStart=null;addMark(tool,p,p);});
+$('undo').addEventListener('click',()=>{if(!marks.length){say('Er zijn geen markeringen om ongedaan te maken.');return}marks.pop();renumber();render();renderList();say('Laatste markering verwijderd.')});
+$('clear').addEventListener('click',()=>{if(!marks.length){say('Er zijn geen markeringen.');return}if(!confirm('Alle markeringen verwijderen?'))return;marks=[];pendingStart=null;render();renderList();say('Alle markeringen gewist.')});
+$('save').addEventListener('click',()=>{if(!photo){say('Open eerst een foto.');return}try{canvas.toBlob(blob=>{if(!blob){say('PNG exporteren is niet gelukt.');return}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='MME-Foto-Marker-'+new Date().toISOString().slice(0,10)+'.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);say('PNG aangemaakt. Controleer de downloads op je apparaat.')},'image/png')}catch(err){say('Opslaan lukte niet. Probeer de pagina in Safari of Chrome te openen.')}});
+render();
+})();
+</script>
+</body>
+</html>
